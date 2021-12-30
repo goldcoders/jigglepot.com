@@ -1,5 +1,9 @@
-import { useLoaderData } from 'remix'
+import { MetaFunction, useLoaderData } from 'remix';
 
+
+export const meta: MetaFunction = () => {
+    return { title: "Blog Posts" };
+};
 //! TODO set the types other than string
 type Post = {
     id: string

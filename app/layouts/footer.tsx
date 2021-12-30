@@ -3,7 +3,7 @@ import { SVGProps } from "react";
 
 export default function FooterBar() {
   return (
-    <footer className="bg-white">
+    <footer className="sticky bg-white">
       <div className="px-4 py-12 mx-auto overflow-hidden max-w-7xl sm:px-6 lg:px-8">
         <nav className="flex flex-wrap justify-center -mx-5 -my-2" aria-label="Footer">
           {navigation.main.map((item) => (
