@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
     Form, json, redirect, useActionData
 } from "remix";
@@ -64,6 +65,8 @@ export let meta = () => {
 // https://remix.run/guides/routing#index-routes
 function Login() {
     const actionData = useActionData();
+    const [remember, setRemember] = useState(false)
+
     return (
         <div className="flex flex-col justify-center min-h-full py-12 sm:px-6 lg:px-8">
             <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -117,6 +120,8 @@ function Login() {
                                     id="remember-me"
                                     name="remember-me"
                                     type="checkbox"
+                                    checked={remember}
+                                    onChange={() => setRemember(!remember)}
                                     className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                                 />
                                 <label htmlFor="remember-me" className="block ml-2 text-sm text-gray-900">
