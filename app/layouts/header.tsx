@@ -163,15 +163,15 @@ export default function HeaderBar() {
             </Popover>
           </Popover.Group>
           <div className="flex items-center md:ml-12">
-            <a href="#" className="text-base font-medium text-gray-500 hover:text-gray-900">
+            <Link to="/login" className="text-base font-medium text-gray-500 hover:text-gray-900">
               Sign in
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              to="/register"
               className="inline-flex items-center justify-center px-4 py-2 ml-8 text-base font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700"
             >
               Sign up
-            </a>
+            </Link>
           </div>
         </div>
       </div>
@@ -244,17 +244,17 @@ export default function HeaderBar() {
                 ))}
               </div>
               <div className="mt-6">
-                <a
-                  href="#"
+                <Link
+                  to="/register"
                   className="flex items-center justify-center w-full px-4 py-2 text-base font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700"
                 >
                   Sign up
-                </a>
+                </Link>
                 <p className="mt-6 text-base font-medium text-center text-gray-500">
                   Existing customer?{' '}
-                  <a href="#" className="text-indigo-600 hover:text-indigo-500">
+                  <Link to="/login" className="text-indigo-600 hover:text-indigo-500">
                     Sign in
-                  </a>
+                  </Link>
                 </p>
               </div>
             </div>
