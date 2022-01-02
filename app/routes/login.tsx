@@ -18,7 +18,6 @@ export let loader = () => {
 };
 
 function validateEmail(email: unknown) {
-    // add regex validation for email here
     if (typeof email !== "string" || !(email.match(/[a-z0-9]+@[a-z]+\.[a-z]{2,3}/))) {
         return `Please Enter Valid Email`
     }
@@ -52,7 +51,7 @@ function validatePassword(password: unknown) {
 export let action: ActionFunction = async ({
     request,
 }): Promise<Response | ActionData> => {
-    // get user credentials from form
+
     let { email, password } = Object.fromEntries(await request.formData())
 
     if (
@@ -61,15 +60,14 @@ export let action: ActionFunction = async ({
     ) {
         return { formError: `Form Input was submitted with Invalid Types` };
     }
+
     let fields = { email, password };
 
-    // validate fields
     let fieldErrors = {
         email: validateEmail(email),
         password: validatePassword(password),
     };
 
-    // Return All Field Errors
     if (Object.values(fieldErrors).some(Boolean)) return { fieldErrors, fields };
 
     // login using the credentials
