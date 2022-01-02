@@ -1,8 +1,8 @@
-import { useState } from 'react';
 import {
+    ActionFunction,
     Form, json, redirect, useActionData
 } from "remix";
-import LoginAlert from '../components/login_alert';
+import LoginAlert, { ActionData } from '../components/login_alert';
 import { supabaseClient } from "../utils/db.server";
 import { commitSession, getSession } from '../utils/session.server';
 
@@ -17,16 +17,60 @@ export let loader = () => {
     return json(data);
 };
 
-/**
- *
- * @param {*} param0
- * @returns
- */
-export let action = async ({ request }: { request: any }) => {
+function validateEmail(email: unknown) {
+    // add regex validation for email here
+    if (typeof email !== "string" || !(email.match(/[a-z0-9]+@[a-z]+\.[a-z]{2,3}/))) {
+        return `Please Enter Valid Email`
+    }
+}
+
+function validatePassword(password: unknown) {
+
+    if (typeof password !== "string" || !(password.match(/(?=.{10,})/))) {
+        return `Password Should be At Least 10 Characters`;
+
+    }
+    if (typeof password !== "string" || !(password.match(/(?=.*[A-Z])/))) {
+        return `The password has at least one uppercase letter`;
+
+    }
+    if (typeof password !== "string" || !(password.match(/(?=.*[a-z])/))) {
+        return `The password has at least one lowercase letter`;
+
+    }
+    if (typeof password !== "string" || !(password.match(/(?=.*[0-9])/))) {
+        return `The password has at least one number`;
+
+    }
+    if (typeof password !== "string" || !(password.match(/([^A-Za-z0-9])/))) {
+        return `The password has at least one special character`;
+    }
+}
+
+
+
+export let action: ActionFunction = async ({
+    request,
+}): Promise<Response | ActionData> => {
     // get user credentials from form
-    let form = await request.formData();
-    let email = form.get("email");
-    let password = form.get("password");
+    let { email, password } = Object.fromEntries(await request.formData())
+
+    if (
+        typeof email !== "string" ||
+        typeof password !== "string"
+    ) {
+        return { formError: `Form Input was submitted with Invalid Types` };
+    }
+    let fields = { email, password };
+
+    // validate fields
+    let fieldErrors = {
+        email: validateEmail(email),
+        password: validatePassword(password),
+    };
+
+    // Return All Field Errors
+    if (Object.values(fieldErrors).some(Boolean)) return { fieldErrors, fields };
 
     // login using the credentials
     const { user, error, session } = await supabaseClient.auth.signIn({
@@ -48,10 +92,10 @@ export let action = async ({ request }: { request: any }) => {
                 "Set-Cookie": await commitSession(mysession),
             },
         });
+    } else {
+        return { fields, formError: `Failed to Log you in with these credentials.` }
     }
 
-    // else return the error
-    return { user, error };
 };
 
 // https://remix.run/api/conventions#meta
@@ -64,8 +108,7 @@ export let meta = () => {
 
 // https://remix.run/guides/routing#index-routes
 function Login() {
-    const actionData = useActionData();
-    const [remember, setRemember] = useState(false)
+    const actionData = useActionData<ActionData | undefined>();
 
     return (
         <div className="flex flex-col justify-center min-h-full py-12 sm:px-6 lg:px-8">
@@ -80,7 +123,7 @@ function Login() {
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="px-4 py-8 bg-white shadow sm:rounded-lg sm:px-10">
-                    <Form method="post" className="space-y-6">
+                    <Form method="post" className="space-y-6" aria-describedby={actionData?.formError ? "form-error-message" : undefined}>
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                                 Email address
@@ -89,11 +132,27 @@ function Login() {
                                 <input
                                     id="email"
                                     name="email"
-                                    type="email"
+                                    type="text"
                                     autoComplete="email"
+                                    placeholder="you@example.com"
                                     required
-                                    className="block w-full px-3 py-2 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm appearance-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    defaultValue={actionData?.fields?.email}
+                                    aria-invalid={Boolean(actionData?.fieldErrors?.email)}
+                                    aria-describedby={actionData?.fieldErrors?.email ? "email-error" : undefined}
+                                    className={actionData?.fieldErrors?.email ?
+                                        "block w-full px-3 py-2 text-red-900 placeholder-red-300 border-red-300 rounded-md shadow-sm appearance-none focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                                        : "block w-full px-3 py-2 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm appearance-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    }
                                 />
+                                {actionData?.fieldErrors?.email ? (
+                                    <p
+                                        className="block mt-1 text-sm text-red-500"
+                                        id="email-error"
+                                    >
+
+                                        {actionData.fieldErrors.email}
+                                    </p>
+                                ) : null}
                             </div>
                         </div>
 
@@ -107,21 +166,34 @@ function Login() {
                                     name="password"
                                     type="password"
                                     autoComplete="current-password"
+                                    defaultValue={actionData?.fields?.password}
                                     required
-                                    minLength={6}
-                                    className="block w-full px-3 py-2 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm appearance-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    minLength={10}
+                                    aria-invalid={Boolean(actionData?.fieldErrors?.password)}
+                                    aria-describedby={actionData?.fieldErrors?.password ? "password-error" : undefined}
+                                    className={actionData?.fieldErrors?.password ?
+                                        "block w-full px-3 py-2 text-red-900 placeholder-red-300 border-red-300 rounded-md shadow-sm appearance-none focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                                        : "block w-full px-3 py-2 placeholder-gray-400 border border-gray-300 rounded-md shadow-sm appearance-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                    }
                                 />
+                                {actionData?.fieldErrors?.password ? (
+                                    <p
+                                        className="block mt-1 text-sm text-red-500"
+                                        role="alert"
+                                        id="password-error"
+                                    >
+                                        {actionData.fieldErrors.password}
+                                    </p>
+                                ) : null}
                             </div>
                         </div>
 
                         <div className="flex items-center justify-between">
                             <div className="flex items-center">
                                 <input
-                                    id="remember-me"
-                                    name="remember-me"
+                                    id="remember"
+                                    name="remember"
                                     type="checkbox"
-                                    checked={remember}
-                                    onChange={() => setRemember(!remember)}
                                     className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                                 />
                                 <label htmlFor="remember-me" className="block ml-2 text-sm text-gray-900">
